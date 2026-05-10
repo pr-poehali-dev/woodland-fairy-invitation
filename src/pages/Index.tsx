@@ -1,311 +1,444 @@
 import { useState, useEffect, useRef } from 'react';
+import Icon from '@/components/ui/icon';
 
-const IMG_CORNER   = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/6d59e4fb-217e-4c8c-b02c-964615c100b2.jpg';
-const IMG_HOUSE    = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/72a41068-8dae-4f58-ac4c-17cbca37bef6.jpg';
-const IMG_DEER     = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/469e1ca2-d50c-458e-bdb7-a4b47673f9f8.jpg';
-const IMG_FOREST   = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/48026b69-4639-49c4-bcb9-e8b500367ee3.jpg';
-const IMG_ORNAMENT = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/d8be9226-8e58-4641-834c-2ff3f373759e.jpg';
-const COUPLE_PHOTO = 'https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/bucket/d1ece0a1-6c03-4bef-ac9a-48ce33878333.png';
+const LEAF_CORNER = "https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/6d59e4fb-217e-4c8c-b02c-964615c100b2.jpg";
+const LEAF_BRANCH = "https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/5604387a-f9ec-4c59-ab84-f5c6f099fe09.jpg";
 
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null);
+const SCHEDULE = [
+  { time: '15:00', title: 'Сбор гостей', desc: 'Встреча у главного входа, приветственные напитки' },
+  { time: '16:00', title: 'Церемония', desc: 'Торжественная регистрация брака' },
+  { time: '17:30', title: 'Фуршет', desc: 'Лёгкие закуски и фотосессия в саду' },
+  { time: '19:00', title: 'Торжественный ужин', desc: 'Банкет, поздравления и первый танец' },
+  { time: '21:00', title: 'Вечеринка', desc: 'Живая музыка и танцы' },
+  { time: '00:00', title: 'Фейерверк', desc: 'Праздничный салют в полночь' },
+];
+
+function useInView(ref: React.RefObject<Element>) {
+  const [inView, setInView] = useState(false);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) el.classList.add('visible'); },
-      { threshold: 0.1 }
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setInView(true); },
+      { threshold: 0.15 }
     );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return ref;
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return inView;
 }
 
-function Rule() {
-  return <div className="rule-thick" />;
-}
-function RuleThin() {
-  return <div className="rule-thin" />;
-}
-
-function Ornament({ label }: { label?: string }) {
+function Section({ id, children, className = '' }: { id?: string; children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref);
   return (
-    <div className="ornament text-sm my-2">
-      {label || '❧'}
+    <section id={id} ref={ref} className={`transition-all duration-1000 ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>
+      {children}
+    </section>
+  );
+}
+
+function FancyRule({ label }: { label?: string }) {
+  return (
+    <div className="fancy-rule my-6">
+      {label && <span className="serif italic px-2" style={{ color: 'var(--forest)' }}>{label}</span>}
     </div>
   );
 }
 
+function CornerLeaves() {
+  return (
+    <>
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, left: 0 }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, right: 0, transform: 'scaleX(-1)' }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, left: 0, transform: 'scaleY(-1)' }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, right: 0, transform: 'scale(-1, -1)' }} />
+    </>
+  );
+}
+
 export default function Index() {
-  const [attend, setAttend] = useState<'yes' | 'no'>('yes');
-  const [form, setForm] = useState({ name: '', guests: '', wishes: '' });
-  const [sent, setSent] = useState(false);
+  const [rsvpForm, setRsvpForm] = useState({ name: '', guests: '1', attend: 'yes', message: '' });
+  const [submitted, setSubmitted] = useState(false);
 
-  const refMain  = useReveal();
-  const refNames = useReveal();
-  const refForm  = useReveal();
-
-  const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleRsvp = (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    setSubmitted(true);
   };
 
   return (
-    <div className="paper-texture min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen paper-bg botanical-frame relative overflow-hidden">
 
-      {/* ── BOTANICAL CORNERS fixed ── */}
-      <img src={IMG_CORNER} alt="" className="corner-leaf tl" />
-      <img src={IMG_CORNER} alt="" className="corner-leaf tr" />
-      <img src={IMG_CORNER} alt="" className="corner-leaf bl" />
-      <img src={IMG_CORNER} alt="" className="corner-leaf br" />
+      {/* Botanical leaves at corners — frame around the whole site */}
+      <div className="fixed inset-0 pointer-events-none z-50">
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, left: 0 }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, right: 0, transform: 'scaleX(-1)' }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, left: 0, transform: 'scaleY(-1)' }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, right: 0, transform: 'scale(-1, -1)' }} />
+      </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 py-6">
+      {/* Paper stains overlay */}
+      <div className="paper-stains" />
 
-        {/* ══ NAV ══ */}
-        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-4 fade-in">
-          {[
-            { label: 'Главная',      id: 'top' },
-            { label: 'Наша история', id: 'story' },
-            { label: 'Детали',       id: 'details' },
-            { label: 'Анкета гостя', id: 'rsvp' },
-            { label: 'Пожелания',    id: 'rsvp' },
-          ].map(n => (
-            <button key={n.label} onClick={() => scrollTo(n.id)} className="nav-link">
-              {n.label}
-            </button>
-          ))}
-        </nav>
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-12 py-10 md:py-16">
 
-        {/* ══ MASTHEAD ══ */}
-        <header id="top" className="text-center">
-          <Rule />
-          <h1 className="mega-title py-3 fade-in">Приглашение</h1>
-          <div
-            className="fade-in-d1 flex items-center justify-center gap-3 mb-1"
-            style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', color: 'var(--ink-mid)', fontSize: '1.1rem' }}
-          >
-            <span className="rule-thin" style={{ flex: 1, display: 'inline-block', height: 1, background: 'var(--ink-mid)' }} />
-            на нашу свадьбу
-            <span className="rule-thin" style={{ flex: 1, display: 'inline-block', height: 1, background: 'var(--ink-mid)' }} />
+        {/* MASTHEAD — newspaper header */}
+        <header className="text-center animate-ink">
+          <div className="flex items-center justify-between text-xs typewriter mb-3" style={{ color: 'var(--ink-soft)' }}>
+            <span>№ 0721 · ИЗДАНИЕ ЛЕТНЕЕ</span>
+            <span className="hidden sm:inline">ВТОРНИК · 21 ИЮЛЯ · 2026</span>
+            <span>ЦЕНА — БЕСЦЕННО</span>
           </div>
-          <Rule />
-          <RuleThin />
-          <div className="fade-in-d2 flex items-center justify-between py-2 gap-2 flex-wrap px-1">
-            <span className="font-type text-xs" style={{ color: 'var(--ink-soft)', letterSpacing: '0.14em' }}>ВЫПУСК №1</span>
-            <span className="font-type text-xs hidden sm:inline" style={{ color: 'var(--ink-soft)', letterSpacing: '0.1em' }}>✦ СОЗДАЁМ НАШУ ВЕЧНУЮ ИСТОРИЮ ✦</span>
-            <span className="font-type text-xs" style={{ color: 'var(--ink-soft)', letterSpacing: '0.14em' }}>21 ИЮЛЯ 2026 ГОДА</span>
-          </div>
-          <RuleThin />
-          <Rule />
+          <div className="thick-rule" />
+
+          <p className="serif italic text-sm md:text-base mb-2" style={{ color: 'var(--sepia)' }}>
+            — Свадебный вестник —
+          </p>
+
+          <h1 className="headline text-5xl sm:text-7xl md:text-8xl my-4">
+            ВЕСТНИК<br />
+            <span className="headline-italic" style={{ fontSize: '0.85em' }}>любви</span>
+          </h1>
+
+          <div className="thick-rule" />
+          <p className="typewriter text-xs md:text-sm tracking-widest" style={{ color: 'var(--ink-soft)' }}>
+            ОФИЦИАЛЬНОЕ ПРИГЛАШЕНИЕ · ЕДИНСТВЕННЫЙ ВЫПУСК · ТИРАЖ ОГРАНИЧЕН
+          </p>
         </header>
 
-        {/* ══ 3-COLUMN MAIN BLOCK ══ */}
-        <div ref={refMain} id="story" className="reveal mt-1 border border-[var(--border-color)]">
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr_1fr]">
+        {/* HERO ARTICLE */}
+        <Section className="mt-10 md:mt-16">
+          <div className="text-center mb-8">
+            <p className="article-label">экстренный выпуск</p>
+            <h2 className="headline text-4xl md:text-6xl mb-4">
+              СЕНСАЦИЯ! ДВА СЕРДЦА<br />
+              ОБЪЯВЛЯЮТ О СОЮЗЕ
+            </h2>
+            <p className="serif italic text-lg md:text-xl" style={{ color: 'var(--forest)' }}>
+              Подробности на первой полосе
+            </p>
+          </div>
 
-            {/* LEFT */}
-            <div className="p-5 border-b md:border-b-0 md:border-r border-[var(--border-color)] flex flex-col gap-4">
+          <FancyRule />
+
+          <div className="grid md:grid-cols-[1fr_auto_1fr] gap-8 items-center text-center my-10">
+            <div>
+              <p className="typewriter text-xs tracking-widest mb-2" style={{ color: 'var(--sepia)' }}>невеста</p>
+              <h3 className="headline text-5xl md:text-6xl" style={{ color: 'var(--forest)' }}>Кристина</h3>
+              <p className="serif italic mt-2" style={{ color: 'var(--ink-soft)' }}>прелестная и сияющая</p>
+            </div>
+            <div className="text-7xl headline-italic" style={{ color: 'var(--forest)' }}>&</div>
+            <div>
+              <p className="typewriter text-xs tracking-widest mb-2" style={{ color: 'var(--sepia)' }}>жених</p>
+              <h3 className="headline text-5xl md:text-6xl" style={{ color: 'var(--forest)' }}>Виталий</h3>
+              <p className="serif italic mt-2" style={{ color: 'var(--ink-soft)' }}>галантный и преданный</p>
+            </div>
+          </div>
+
+          <FancyRule />
+
+          {/* Date mega */}
+          <div className="text-center my-12">
+            <p className="typewriter text-xs tracking-widest mb-3" style={{ color: 'var(--sepia)' }}>
+              торжественная дата
+            </p>
+            <div className="flex items-end justify-center gap-4 md:gap-8">
               <div>
-                <h3 className="font-headline text-xs tracking-widest text-center mb-2" style={{ color: 'var(--ink)' }}>
-                  ДОРОГИЕ ДРУЗЬЯ!
-                </h3>
-                <RuleThin />
-                <p className="font-serif text-base leading-relaxed text-center mt-2" style={{ color: 'var(--ink-soft)' }}>
-                  Мы очень хотим разделить с вами один из самых важных дней в нашей жизни — день нашей свадьбы! Приглашаем вас стать частью нашей истории любви.
+                <div className="date-mega">21</div>
+                <p className="typewriter text-xs tracking-widest mt-2">ДЕНЬ</p>
+              </div>
+              <div className="pb-4">
+                <div className="text-3xl headline-italic">·</div>
+              </div>
+              <div>
+                <div className="date-mega">07</div>
+                <p className="typewriter text-xs tracking-widest mt-2">МЕСЯЦ</p>
+              </div>
+              <div className="pb-4">
+                <div className="text-3xl headline-italic">·</div>
+              </div>
+              <div>
+                <div className="date-mega">26</div>
+                <p className="typewriter text-xs tracking-widest mt-2">ГОД</p>
+              </div>
+            </div>
+            <div className="mt-6 inline-block">
+              <span className="stamp">только один день</span>
+            </div>
+          </div>
+        </Section>
+
+        {/* DOUBLE BORDER DIVIDER */}
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ важнейшие сведения о торжестве ✦
+          </span>
+        </div>
+
+        {/* ABOUT — newspaper article style */}
+        <Section id="about" className="mb-16">
+          <div className="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
+            <article>
+              <p className="article-label">от редакции</p>
+              <h2 className="headline text-3xl md:text-5xl mb-2">
+                Лето, что войдёт в историю
+              </h2>
+              <p className="serif italic mb-6" style={{ color: 'var(--sepia)' }}>
+                Корреспондент сообщает с места событий
+              </p>
+
+              <div className="newspaper-cols serif text-base md:text-lg leading-relaxed" style={{ color: 'var(--ink)' }}>
+                <p className="drop-cap mb-4">
+                  Дорогие друзья и родственники! С особым волнением и радостью сообщаем вам о грядущем торжестве, которому суждено стать одним из самых светлых дней нашей жизни.
                 </p>
-                <div className="flex justify-center mt-3">
-                  <img src={IMG_ORNAMENT} alt="" className="h-8 opacity-60" style={{ mixBlendMode: 'multiply' }} />
+                <p className="mb-4">
+                  В этот летний день, под щедрым солнцем и в окружении самых близких людей, состоится наше бракосочетание. Мы будем безмерно счастливы видеть вас рядом и разделить с вами эти волшебные мгновения.
+                </p>
+                <p>
+                  Просим вас явиться нарядными, в добром расположении духа и с готовностью танцевать до самого утра. Подробное расписание дня — на следующей странице.
+                </p>
+              </div>
+            </article>
+
+            <aside className="article">
+              <p className="article-label">справка</p>
+              <div className="space-y-4 text-sm serif">
+                <div>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>ДАТА</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>21 июля 2026 г.</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>НАЧАЛО</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>15:00 пополудни</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>МЕСТО</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>Усадьба «Лесной двор»</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>ДРЕСС-КОД</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>Парадно-летний</p>
                 </div>
               </div>
-
-              <RuleThin />
-
-              {/* Date */}
-              <div className="text-center">
-                <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: 'clamp(3.5rem,9vw,5rem)', lineHeight: 1, color: 'var(--ink)' }}>21</div>
-                <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(1.4rem,4vw,2rem)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)' }}>ИЮЛЯ</div>
-                <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: 'clamp(3rem,8vw,4rem)', lineHeight: 1, color: 'var(--ink)' }}>2026</div>
-              </div>
-
-              <RuleThin />
-
-              {/* Deer */}
-              <img
-                src={IMG_DEER}
-                alt="олень"
-                className="w-full opacity-80"
-                style={{ mixBlendMode: 'multiply', filter: 'sepia(0.2) contrast(1.1)' }}
-              />
-            </div>
-
-            {/* CENTER — photo */}
-            <div id="details" className="p-3 border-b md:border-b-0 md:border-r border-[var(--border-color)] flex flex-col items-center">
-              <div className="photo-frame w-full overflow-hidden" style={{ maxHeight: 480 }}>
-                <img
-                  src={COUPLE_PHOTO}
-                  alt="Кристина и Виталий"
-                  className="w-full h-full object-cover object-top"
-                  style={{ aspectRatio: '3/4' }}
-                />
-              </div>
-            </div>
-
-            {/* RIGHT */}
-            <div className="p-5 flex flex-col gap-4">
-              <div>
-                <h3 className="font-headline text-xs tracking-widest text-center mb-2" style={{ color: 'var(--ink)' }}>
-                  МЕСТО ПРОВЕДЕНИЯ
-                </h3>
-                <RuleThin />
-                <img
-                  src={IMG_HOUSE}
-                  alt="La Villa"
-                  className="w-full mt-2 opacity-85"
-                  style={{ mixBlendMode: 'multiply', filter: 'sepia(0.35) contrast(1.1)' }}
-                />
-                <p className="font-headline text-sm text-center tracking-widest mt-2" style={{ color: 'var(--ink)' }}>
-                  LaVilla House
-                </p>
-                <RuleThin />
-                <p className="font-serif text-sm text-center leading-snug mt-2" style={{ color: 'var(--ink-soft)' }}>
-                  Речкуновская Зона Отдыха м-н,<br />
-                  Бердск, Новосибирская область
-                </p>
-              </div>
-
-              <RuleThin />
-
-              <img
-                src={IMG_FOREST}
-                alt=""
-                className="w-full opacity-65"
-                style={{ mixBlendMode: 'multiply', filter: 'sepia(0.25) contrast(1.1)' }}
-              />
-
-              <RuleThin />
-
-              <p className="font-headline text-sm text-center tracking-widest leading-snug" style={{ color: 'var(--ink)' }}>
-                МЫ БУДЕМ РАДЫ<br />ВИДЕТЬ ВАС!
-              </p>
-            </div>
+            </aside>
           </div>
+        </Section>
+
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ хроника торжественного дня ✦
+          </span>
         </div>
 
-        {/* ══ NAMES BLOCK ══ */}
-        <div ref={refNames} className="reveal border-x border-b border-[var(--border-color)] py-7 px-4 text-center">
-          <div className="names-title">Кристина &amp; Виталий</div>
-
-          <div className="flex items-center justify-center gap-3 my-2">
-            <span style={{ flex: 1, height: 1, background: 'var(--border-color)', maxWidth: 120, display: 'block' }} />
-            <span style={{ color: 'var(--ink)', fontSize: '1.1rem' }}>♥</span>
-            <span style={{ flex: 1, height: 1, background: 'var(--border-color)', maxWidth: 120, display: 'block' }} />
+        {/* SCHEDULE */}
+        <Section id="schedule" className="mb-16">
+          <div className="text-center mb-10">
+            <p className="article-label">программа</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
+              Расписание торжества
+            </h2>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>Час за часом, минута в минуту</p>
           </div>
 
-          <Ornament label="НАШ ДЕНЬ" />
+          <div className="grid md:grid-cols-2 gap-x-12">
+            {SCHEDULE.map((item, i) => (
+              <div key={i} className="tl-row">
+                <div className="text-right">
+                  <span className="headline text-2xl md:text-3xl" style={{ color: 'var(--forest)' }}>{item.time}</span>
+                </div>
+                <div>
+                  <h3 className="headline text-xl mb-1">{item.title}</h3>
+                  <p className="serif text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
 
-          <p className="font-serif text-base md:text-lg leading-relaxed max-w-xl mx-auto mt-4" style={{ color: 'var(--ink-soft)' }}>
-            Мы верим, что любовь — это не только чувство, но и выбор. И мы выбрали друг друга. Этот день станет началом нашей новой, удивительной главы, и мы хотим, чтобы вы были рядом, чтобы разделить с нами радость, смех и самые тёплые моменты.
-          </p>
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ карта местности ✦
+          </span>
         </div>
 
-        {/* ══ RSVP ══ */}
-        <div id="rsvp" ref={refForm} className="reveal mt-6">
-          <div className="form-section p-6 md:p-10">
+        {/* VENUE */}
+        <Section id="venue" className="mb-16">
+          <div className="text-center mb-8">
+            <p className="article-label">путеводитель</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
+              Усадьба «Лесной двор»
+            </h2>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>
+              Московская область, Одинцовский район, д. Лесная, 1
+            </p>
+          </div>
+
+          <div className="article p-2" style={{ borderWidth: 2 }}>
+            <div className="relative" style={{ height: 360, border: '1px solid var(--ink)' }}>
+              <iframe
+                src="https://www.openstreetmap.org/export/embed.html?bbox=36.8,55.7,37.2,55.9&layer=mapnik"
+                className="w-full h-full"
+                style={{ filter: 'sepia(0.85) saturate(0.6) contrast(1.1) brightness(0.95)' }}
+                title="Карта"
+              />
+              <div className="absolute top-3 left-3 stamp" style={{ transform: 'rotate(-3deg)' }}>
+                место встречи
+              </div>
+            </div>
+            <p className="text-center typewriter text-xs mt-2" style={{ color: 'var(--sepia)' }}>
+              ИЗВЛЕЧЕНО ИЗ КАРТОГРАФИЧЕСКОГО АРХИВА
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
+            {[
+              { icon: 'Car', title: 'НА ЭКИПАЖЕ', desc: '45 минут от МКАД по Минскому шоссе, съезд на 47-м километре' },
+              { icon: 'Train', title: 'ПОЕЗДОМ', desc: 'С Белорусского вокзала до станции «Лесная», далее извозчик' },
+              { icon: 'Bus', title: 'ОБЩИМ ТРАНСПОРТОМ', desc: 'Организованный омнибус от метро «Киевская» в 14:00' },
+            ].map(item => (
+              <div key={item.title} className="article">
+                <Icon name={item.icon} fallback="MapPin" size={22} style={{ color: 'var(--forest)' }} />
+                <h4 className="typewriter text-xs tracking-widest mt-3 mb-2" style={{ color: 'var(--ink)' }}>{item.title}</h4>
+                <p className="serif text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ телеграмма для молодожёнов ✦
+          </span>
+        </div>
+
+        {/* RSVP */}
+        <Section id="rsvp" className="mb-16">
+          <div className="text-center mb-8">
+            <p className="article-label">форма ответа</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
+              Подтвердите присутствие
+            </h2>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>
+              Просим ответить телеграммой не позднее 1 июля 1926 года
+            </p>
+          </div>
+
+          <div className="article max-w-2xl mx-auto" style={{ borderWidth: 2, padding: '2rem' }}>
             <div className="text-center mb-6">
-              <Ornament />
-              <h2 className="font-headline text-xl md:text-2xl tracking-widest mb-2" style={{ color: 'var(--ink)' }}>
-                АНКЕТА ГОСТЯ
-              </h2>
-              <p className="font-serif text-base" style={{ color: 'var(--ink-soft)' }}>
-                Пожалуйста, подтвердите своё присутствие на нашей свадьбе
-              </p>
+              <span className="stamp">срочно</span>
             </div>
 
-            {sent ? (
+            {submitted ? (
               <div className="text-center py-10">
-                <p className="font-headline text-2xl mb-3" style={{ color: 'var(--forest)' }}>Спасибо!</p>
-                <p className="font-serif text-lg" style={{ color: 'var(--ink-soft)' }}>
-                  Ваш ответ принят. С нетерпением ждём встречи 21 июля!
+                <h3 className="headline text-4xl mb-4" style={{ color: 'var(--forest)' }}>Телеграмма принята!</h3>
+                <p className="serif italic text-lg" style={{ color: 'var(--ink)' }}>
+                  Благодарим за скорый ответ. С нетерпением ждём встречи 21 июля.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl mx-auto">
+              <form onSubmit={handleRsvp} className="space-y-6">
                 <div>
-                  <p className="field-label text-center mb-3">Вы планируете присутствовать?</p>
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <label className="radio-opt">
-                      <input type="radio" name="attend" value="yes" checked={attend === 'yes'} onChange={() => setAttend('yes')} />
-                      Да, с удовольствием!
-                    </label>
-                    <label className="radio-opt">
-                      <input type="radio" name="attend" value="no" checked={attend === 'no'} onChange={() => setAttend('no')} />
-                      К сожалению, не смогу(
-                    </label>
-                  </div>
-                </div>
-
-                <RuleThin />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="field-label">Ваше имя</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Введите ваше имя"
-                      value={form.name}
-                      onChange={e => setForm({ ...form, name: e.target.value })}
-                      className="field-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="field-label">Количество гостей (включая вас)</label>
-                    <input
-                      type="text"
-                      placeholder="Укажите количество"
-                      value={form.guests}
-                      onChange={e => setForm({ ...form, guests: e.target.value })}
-                      className="field-input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="field-label">Пожелания нам</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Ваши тёплые слова..."
-                    value={form.wishes}
-                    onChange={e => setForm({ ...form, wishes: e.target.value })}
-                    className="field-input resize-none"
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    ВАШЕ ИМЯ И ФАМИЛИЯ
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="например, Иван Петров"
+                    value={rsvpForm.name}
+                    onChange={e => setRsvpForm({ ...rsvpForm, name: e.target.value })}
+                    className="paper-input"
                   />
                 </div>
 
-                <div className="pt-2">
-                  <button type="submit" className="submit-btn">Отправить ответ</button>
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-3" style={{ color: 'var(--sepia)' }}>
+                    БУДЕТЕ ЛИ ПРИСУТСТВОВАТЬ?
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[{ value: 'yes', label: 'Да, прибуду' }, { value: 'no', label: 'Не смогу' }].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setRsvpForm({ ...rsvpForm, attend: opt.value })}
+                        className="py-3 typewriter text-xs tracking-widest transition-all"
+                        style={{
+                          background: rsvpForm.attend === opt.value ? 'var(--forest)' : 'transparent',
+                          color: rsvpForm.attend === opt.value ? 'var(--paper)' : 'var(--ink)',
+                          border: '2px solid var(--forest)',
+                          textTransform: 'uppercase',
+                        }}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    КОЛИЧЕСТВО ПЕРСОН
+                  </label>
+                  <select
+                    value={rsvpForm.guests}
+                    onChange={e => setRsvpForm({ ...rsvpForm, guests: e.target.value })}
+                    className="paper-input">
+                    {['1', '2', '3', '4'].map(n => (
+                      <option key={n} value={n}>{n} {n === '1' ? 'персона' : 'персоны'}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    ПОЖЕЛАНИЯ И ПОМЕТКИ
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="оставьте телеграмму молодожёнам..."
+                    value={rsvpForm.message}
+                    onChange={e => setRsvpForm({ ...rsvpForm, message: e.target.value })}
+                    className="paper-input resize-none"
+                    style={{ borderBottom: '1px dashed var(--ink)' }}
+                  />
+                </div>
+
+                <div className="text-center pt-4">
+                  <button type="submit" className="btn-stamp">
+                    отправить телеграмму
+                  </button>
                 </div>
               </form>
             )}
+
+            <div className="mt-8 pt-6 border-t border-dotted" style={{ borderColor: 'var(--ink)' }}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 typewriter text-xs" style={{ color: 'var(--sepia)' }}>
+                <span>ТЕЛЕФОН ДЛЯ СВЯЗИ:</span>
+                <span style={{ color: 'var(--forest)' }}>+7 (999) 123-45-67</span>
+                <span>КРИСТИНА И ВИТАЛИЙ</span>
+              </div>
+            </div>
           </div>
-        </div>
+        </Section>
 
-        {/* ══ FOOTER ══ */}
-        <footer className="text-center py-8">
-          <Ornament />
-          <p className="quote-text px-4">
-            «Настоящая любовь — как лес: она вечна, глубока и полна чудес»
-          </p>
-          <Ornament />
-          <RuleThin />
-          <p className="font-type text-xs mt-3" style={{ color: 'var(--ink-mid)', letterSpacing: '0.15em' }}>
-            21 · 07 · 2026 &nbsp;✦&nbsp; КРИСТИНА И ВИТАЛИЙ
-          </p>
+        {/* FOOTER MASTHEAD */}
+        <footer className="mt-16 text-center">
+          <div className="thick-rule" />
+
+          <div className="my-8">
+            <img src={LEAF_BRANCH} alt="" className="mx-auto h-24 opacity-70" style={{ mixBlendMode: 'multiply' }} />
+          </div>
+
+          <h3 className="headline-italic text-3xl md:text-4xl mb-4">
+            «Любовь — единственная разумная и удовлетворительная цель человеческого существования»
+          </h3>
+          <p className="serif italic" style={{ color: 'var(--sepia)' }}>— Эрих Фромм</p>
+
+          <div className="mt-8 thick-rule" />
+
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs typewriter mt-4 gap-2" style={{ color: 'var(--ink-soft)' }}>
+            <span>ОТПЕЧАТАНО С ЛЮБОВЬЮ</span>
+            <span>К · &nbsp;&nbsp;✦&nbsp;&nbsp; · В</span>
+            <span>21 · 07 · 2026</span>
+          </div>
         </footer>
-
       </div>
     </div>
   );
