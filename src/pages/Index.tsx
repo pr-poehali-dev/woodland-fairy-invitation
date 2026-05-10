@@ -1,21 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import Icon from '@/components/ui/icon';
 
-const HERO_IMAGE = "https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/7d6e5e27-6eff-48fd-9684-cf9a17dcd470.jpg";
-
-const NAV_LINKS = [
-  { label: 'О нас', href: '#about' },
-  { label: 'Программа', href: '#schedule' },
-  { label: 'Место', href: '#venue' },
-  { label: 'RSVP', href: '#rsvp' },
-];
+const LEAF_CORNER = "https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/6d59e4fb-217e-4c8c-b02c-964615c100b2.jpg";
+const LEAF_BRANCH = "https://cdn.poehali.dev/projects/1ef3fdcb-f305-4032-9b6b-7eb16be02ed4/files/5604387a-f9ec-4c59-ab84-f5c6f099fe09.jpg";
 
 const SCHEDULE = [
   { time: '15:00', title: 'Сбор гостей', desc: 'Встреча у главного входа, приветственные напитки' },
-  { time: '16:00', title: 'Церемония', desc: 'Торжественная регистрация брака в лесном павильоне' },
+  { time: '16:00', title: 'Церемония', desc: 'Торжественная регистрация брака' },
   { time: '17:30', title: 'Фуршет', desc: 'Лёгкие закуски и фотосессия в саду' },
   { time: '19:00', title: 'Торжественный ужин', desc: 'Банкет, поздравления и первый танец' },
-  { time: '21:00', title: 'Вечеринка', desc: 'Живая музыка и танцы под звёздным небом' },
+  { time: '21:00', title: 'Вечеринка', desc: 'Живая музыка и танцы' },
   { time: '00:00', title: 'Фейерверк', desc: 'Праздничный салют в полночь' },
 ];
 
@@ -28,42 +22,42 @@ function useInView(ref: React.RefObject<Element>) {
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, []);
+  }, [ref]);
   return inView;
 }
 
 function Section({ id, children, className = '' }: { id?: string; children: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref as React.RefObject<Element>);
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref);
   return (
-    <section id={id} ref={ref} className={`transition-all duration-1000 ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}>
+    <section id={id} ref={ref} className={`transition-all duration-1000 ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>
       {children}
     </section>
   );
 }
 
-function Ornament() {
+function FancyRule({ label }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 justify-center my-6">
-      <div className="gold-line flex-1 max-w-24" />
-      <span style={{ color: 'var(--gold)', fontSize: '0.9rem' }}>✦</span>
-      <span style={{ color: 'var(--gold)', fontSize: '0.55rem', opacity: 0.7 }}>✦</span>
-      <span style={{ color: 'var(--gold)', fontSize: '0.9rem' }}>✦</span>
-      <div className="gold-line flex-1 max-w-24" />
+    <div className="fancy-rule my-6">
+      {label && <span className="serif italic px-2" style={{ color: 'var(--forest)' }}>{label}</span>}
     </div>
   );
 }
 
+function CornerLeaves() {
+  return (
+    <>
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, left: 0 }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, right: 0, transform: 'scaleX(-1)' }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, left: 0, transform: 'scaleY(-1)' }} />
+      <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, right: 0, transform: 'scale(-1, -1)' }} />
+    </>
+  );
+}
+
 export default function Index() {
-  const [scrolled, setScrolled] = useState(false);
   const [rsvpForm, setRsvpForm] = useState({ name: '', guests: '1', attend: 'yes', message: '' });
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const handleRsvp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,314 +65,381 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--forest)', color: 'var(--cream)' }}>
+    <div className="min-h-screen paper-bg botanical-frame relative overflow-hidden">
 
-      {/* NAV */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'py-3' : 'py-5'}`}
-        style={{
-          background: scrolled ? 'rgba(22,38,24,0.95)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(201,168,76,0.15)' : 'none'
-        }}>
-        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
-          <div className="font-['Cormorant_Garamond'] text-lg tracking-widest" style={{ color: 'var(--gold)' }}>
-            А&nbsp;&nbsp;✦&nbsp;&nbsp;Е
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(link => (
-              <a key={link.href} href={link.href} className="nav-link">{link.label}</a>
-            ))}
-          </div>
-          <a
-            href="#rsvp"
-            className="hidden md:block text-xs tracking-widest uppercase px-5 py-2 transition-all duration-300"
-            style={{ border: '1px solid var(--gold)', color: 'var(--gold)', fontFamily: 'Golos Text' }}
-            onMouseEnter={e => { const el = e.target as HTMLElement; el.style.background = 'var(--gold)'; el.style.color = 'var(--forest)'; }}
-            onMouseLeave={e => { const el = e.target as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--gold)'; }}>
-            Подтвердить
-          </a>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="Лесная свадьба" className="w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(22,38,24,0.55) 0%, rgba(22,38,24,0.7) 60%, var(--forest) 100%)' }} />
-        </div>
-
-        <div className="absolute top-32 left-16 text-4xl animate-float opacity-20" style={{ animationDelay: '0s' }}>🍃</div>
-        <div className="absolute top-48 right-20 text-3xl animate-float opacity-15" style={{ animationDelay: '2s' }}>🌿</div>
-        <div className="absolute bottom-48 left-24 text-2xl animate-float opacity-20" style={{ animationDelay: '4s' }}>🍂</div>
-        <div className="absolute bottom-64 right-16 text-3xl animate-float opacity-15" style={{ animationDelay: '1s' }}>🌿</div>
-
-        <div className="relative z-10 text-center px-6 animate-fade-up">
-          <p className="text-xs tracking-[0.4em] uppercase mb-6" style={{ color: 'var(--gold)', fontFamily: 'Golos Text' }}>
-            приглашение на свадьбу
-          </p>
-          <h1 className="font-['Cormorant_Garamond'] font-light leading-none mb-4" style={{ fontSize: 'clamp(3.5rem, 10vw, 7rem)', color: 'var(--cream)' }}>
-            Александр<br />
-            <span className="italic" style={{ color: 'var(--gold)', fontSize: '0.7em' }}>&</span><br />
-            Елизавета
-          </h1>
-          <Ornament />
-          <p className="font-['Cormorant_Garamond'] text-xl italic mb-2" style={{ color: 'var(--gold-light)' }}>
-            14 июня 2025 года
-          </p>
-          <p className="text-sm tracking-widest opacity-70" style={{ fontFamily: 'Golos Text' }}>
-            Усадьба «Лесной двор» · Подмосковье
-          </p>
-
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#about"
-              className="px-8 py-3 font-['Golos_Text'] text-sm tracking-widest uppercase transition-all duration-300"
-              style={{ background: 'var(--gold)', color: 'var(--forest)' }}
-              onMouseEnter={e => (e.target as HTMLElement).style.background = 'var(--gold-light)'}
-              onMouseLeave={e => (e.target as HTMLElement).style.background = 'var(--gold)'}>
-              Узнать подробнее
-            </a>
-            <a
-              href="#rsvp"
-              className="px-8 py-3 font-['Golos_Text'] text-sm tracking-widest uppercase transition-all duration-300"
-              style={{ border: '1px solid rgba(201,168,76,0.5)', color: 'var(--gold)' }}
-              onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'var(--gold)'; }}
-              onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'rgba(201,168,76,0.5)'; }}>
-              Подтвердить участие
-            </a>
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
-          <div className="w-px h-12" style={{ background: 'linear-gradient(180deg, transparent, var(--gold))' }} />
-          <Icon name="ChevronDown" size={14} style={{ color: 'var(--gold)' }} />
-        </div>
+      {/* Botanical leaves at corners — frame around the whole site */}
+      <div className="fixed inset-0 pointer-events-none z-50">
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, left: 0 }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ top: 0, right: 0, transform: 'scaleX(-1)' }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, left: 0, transform: 'scaleY(-1)' }} />
+        <img src={LEAF_CORNER} alt="" className="leaf-corner" style={{ bottom: 0, right: 0, transform: 'scale(-1, -1)' }} />
       </div>
 
-      {/* ABOUT */}
-      <Section id="about" className="py-24 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs tracking-[0.4em] uppercase mb-4" style={{ color: 'var(--gold)', fontFamily: 'Golos Text' }}>О событии</p>
-          <h2 className="font-['Cormorant_Garamond'] font-light text-4xl md:text-5xl mb-6" style={{ color: 'var(--cream)' }}>
-            Наша лесная сказка
-          </h2>
-          <Ornament />
-          <p className="font-['Cormorant_Garamond'] text-lg md:text-xl italic leading-relaxed mb-8" style={{ color: 'var(--gold-light)' }}>
-            «Мы нашли друг друга среди звёзд и решили отпраздновать это среди деревьев»
-          </p>
-          <p className="leading-relaxed opacity-80 mb-6 text-base" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
-            Мы рады пригласить вас разделить с нами один из самых важных дней в нашей жизни. Торжество пройдёт в окружении вековых сосен и лесных цветов, в атмосфере тепла, любви и волшебства.
-          </p>
-          <p className="leading-relaxed opacity-80 text-base" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
-            Ваше присутствие станет для нас лучшим подарком. Мы ждём вас, чтобы вместе начать эту новую главу.
-          </p>
+      {/* Paper stains overlay */}
+      <div className="paper-stains" />
 
-          <div className="grid grid-cols-3 gap-8 mt-14">
-            {[
-              { icon: 'Calendar', label: 'Дата', value: '14 июня 2025' },
-              { icon: 'Clock', label: 'Начало', value: '15:00' },
-              { icon: 'MapPin', label: 'Место', value: 'Усадьба «Лесной двор»' },
-            ].map(item => (
-              <div key={item.label} className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full mb-3" style={{ border: '1px solid rgba(201,168,76,0.3)' }}>
-                  <Icon name={item.icon} fallback="Circle" size={16} style={{ color: 'var(--gold)' }} />
-                </div>
-                <p className="text-xs tracking-widest uppercase opacity-50 mb-1" style={{ fontFamily: 'Golos Text' }}>{item.label}</p>
-                <p className="font-['Cormorant_Garamond'] text-lg" style={{ color: 'var(--cream)' }}>{item.value}</p>
-              </div>
-            ))}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-12 py-10 md:py-16">
+
+        {/* MASTHEAD — newspaper header */}
+        <header className="text-center animate-ink">
+          <div className="flex items-center justify-between text-xs typewriter mb-3" style={{ color: 'var(--ink-soft)' }}>
+            <span>№ 0721 · ИЗДАНИЕ ЛЕТНЕЕ</span>
+            <span className="hidden sm:inline">ВТОРНИК · 21 ИЮЛЯ · 2026</span>
+            <span>ЦЕНА — БЕСЦЕННО</span>
           </div>
-        </div>
-      </Section>
+          <div className="thick-rule" />
 
-      <div className="gold-line max-w-xs mx-auto opacity-30" />
+          <p className="serif italic text-sm md:text-base mb-2" style={{ color: 'var(--sepia)' }}>
+            — Свадебный вестник —
+          </p>
 
-      {/* SCHEDULE */}
-      <Section id="schedule" className="py-24 px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs tracking-[0.4em] uppercase mb-4" style={{ color: 'var(--gold)', fontFamily: 'Golos Text' }}>Программа дня</p>
-            <h2 className="font-['Cormorant_Garamond'] font-light text-4xl md:text-5xl" style={{ color: 'var(--cream)' }}>
-              День нашей свадьбы
+          <h1 className="headline text-5xl sm:text-7xl md:text-8xl my-4">
+            ВЕСТНИК<br />
+            <span className="headline-italic" style={{ fontSize: '0.85em' }}>любви</span>
+          </h1>
+
+          <div className="thick-rule" />
+          <p className="typewriter text-xs md:text-sm tracking-widest" style={{ color: 'var(--ink-soft)' }}>
+            ОФИЦИАЛЬНОЕ ПРИГЛАШЕНИЕ · ЕДИНСТВЕННЫЙ ВЫПУСК · ТИРАЖ ОГРАНИЧЕН
+          </p>
+        </header>
+
+        {/* HERO ARTICLE */}
+        <Section className="mt-10 md:mt-16">
+          <div className="text-center mb-8">
+            <p className="article-label">экстренный выпуск</p>
+            <h2 className="headline text-4xl md:text-6xl mb-4">
+              СЕНСАЦИЯ! ДВА СЕРДЦА<br />
+              ОБЪЯВЛЯЮТ О СОЮЗЕ
             </h2>
-            <Ornament />
+            <p className="serif italic text-lg md:text-xl" style={{ color: 'var(--forest)' }}>
+              Подробности на первой полосе
+            </p>
           </div>
 
-          <div className="space-y-8">
+          <FancyRule />
+
+          <div className="grid md:grid-cols-[1fr_auto_1fr] gap-8 items-center text-center my-10">
+            <div>
+              <p className="typewriter text-xs tracking-widest mb-2" style={{ color: 'var(--sepia)' }}>невеста</p>
+              <h3 className="headline text-5xl md:text-6xl" style={{ color: 'var(--forest)' }}>Кристина</h3>
+              <p className="serif italic mt-2" style={{ color: 'var(--ink-soft)' }}>прелестная и сияющая</p>
+            </div>
+            <div className="text-7xl headline-italic" style={{ color: 'var(--forest)' }}>&</div>
+            <div>
+              <p className="typewriter text-xs tracking-widest mb-2" style={{ color: 'var(--sepia)' }}>жених</p>
+              <h3 className="headline text-5xl md:text-6xl" style={{ color: 'var(--forest)' }}>Виталий</h3>
+              <p className="serif italic mt-2" style={{ color: 'var(--ink-soft)' }}>галантный и преданный</p>
+            </div>
+          </div>
+
+          <FancyRule />
+
+          {/* Date mega */}
+          <div className="text-center my-12">
+            <p className="typewriter text-xs tracking-widest mb-3" style={{ color: 'var(--sepia)' }}>
+              торжественная дата
+            </p>
+            <div className="flex items-end justify-center gap-4 md:gap-8">
+              <div>
+                <div className="date-mega">21</div>
+                <p className="typewriter text-xs tracking-widest mt-2">ДЕНЬ</p>
+              </div>
+              <div className="pb-4">
+                <div className="text-3xl headline-italic">·</div>
+              </div>
+              <div>
+                <div className="date-mega">07</div>
+                <p className="typewriter text-xs tracking-widest mt-2">МЕСЯЦ</p>
+              </div>
+              <div className="pb-4">
+                <div className="text-3xl headline-italic">·</div>
+              </div>
+              <div>
+                <div className="date-mega">26</div>
+                <p className="typewriter text-xs tracking-widest mt-2">ГОД</p>
+              </div>
+            </div>
+            <div className="mt-6 inline-block">
+              <span className="stamp">только один день</span>
+            </div>
+          </div>
+        </Section>
+
+        {/* DOUBLE BORDER DIVIDER */}
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ важнейшие сведения о торжестве ✦
+          </span>
+        </div>
+
+        {/* ABOUT — newspaper article style */}
+        <Section id="about" className="mb-16">
+          <div className="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
+            <article>
+              <p className="article-label">от редакции</p>
+              <h2 className="headline text-3xl md:text-5xl mb-2">
+                Лето, что войдёт в историю
+              </h2>
+              <p className="serif italic mb-6" style={{ color: 'var(--sepia)' }}>
+                Корреспондент сообщает с места событий
+              </p>
+
+              <div className="newspaper-cols serif text-base md:text-lg leading-relaxed" style={{ color: 'var(--ink)' }}>
+                <p className="drop-cap mb-4">
+                  Дорогие друзья и родственники! С особым волнением и радостью сообщаем вам о грядущем торжестве, которому суждено стать одним из самых светлых дней нашей жизни.
+                </p>
+                <p className="mb-4">
+                  В этот летний день, под щедрым солнцем и в окружении самых близких людей, состоится наше бракосочетание. Мы будем безмерно счастливы видеть вас рядом и разделить с вами эти волшебные мгновения.
+                </p>
+                <p>
+                  Просим вас явиться нарядными, в добром расположении духа и с готовностью танцевать до самого утра. Подробное расписание дня — на следующей странице.
+                </p>
+              </div>
+            </article>
+
+            <aside className="article">
+              <p className="article-label">справка</p>
+              <div className="space-y-4 text-sm serif">
+                <div>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>ДАТА</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>21 июля 2026 г.</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>НАЧАЛО</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>15:00 пополудни</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>МЕСТО</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>Усадьба «Лесной двор»</p>
+                </div>
+                <div className="border-t border-dotted pt-3" style={{ borderColor: 'var(--ink)' }}>
+                  <p className="typewriter text-xs tracking-widest mb-1" style={{ color: 'var(--sepia)' }}>ДРЕСС-КОД</p>
+                  <p className="text-base" style={{ color: 'var(--ink)' }}>Парадно-летний</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </Section>
+
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ хроника торжественного дня ✦
+          </span>
+        </div>
+
+        {/* SCHEDULE */}
+        <Section id="schedule" className="mb-16">
+          <div className="text-center mb-10">
+            <p className="article-label">программа</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
+              Расписание торжества
+            </h2>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>Час за часом, минута в минуту</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-x-12">
             {SCHEDULE.map((item, i) => (
-              <div key={i} className="timeline-item">
-                <div className="flex gap-6 items-start">
-                  <div className="w-14 shrink-0 text-right">
-                    <span className="font-['Cormorant_Garamond'] text-lg" style={{ color: 'var(--gold)' }}>{item.time}</span>
-                  </div>
-                  <div className="pb-6">
-                    <h3 className="font-['Cormorant_Garamond'] text-xl mb-1" style={{ color: 'var(--cream)' }}>{item.title}</h3>
-                    <p className="text-sm opacity-60" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>{item.desc}</p>
-                  </div>
+              <div key={i} className="tl-row">
+                <div className="text-right">
+                  <span className="headline text-2xl md:text-3xl" style={{ color: 'var(--forest)' }}>{item.time}</span>
+                </div>
+                <div>
+                  <h3 className="headline text-xl mb-1">{item.title}</h3>
+                  <p className="serif text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
+        </Section>
+
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ карта местности ✦
+          </span>
         </div>
-      </Section>
 
-      <div className="gold-line max-w-xs mx-auto opacity-30" />
-
-      {/* VENUE */}
-      <Section id="venue" className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs tracking-[0.4em] uppercase mb-4" style={{ color: 'var(--gold)', fontFamily: 'Golos Text' }}>Место и карта</p>
-            <h2 className="font-['Cormorant_Garamond'] font-light text-4xl md:text-5xl" style={{ color: 'var(--cream)' }}>
+        {/* VENUE */}
+        <Section id="venue" className="mb-16">
+          <div className="text-center mb-8">
+            <p className="article-label">путеводитель</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
               Усадьба «Лесной двор»
             </h2>
-            <Ornament />
-            <p className="opacity-70 text-base" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>
               Московская область, Одинцовский район, д. Лесная, 1
             </p>
           </div>
 
-          <div className="relative rounded overflow-hidden mb-10" style={{ border: '1px solid rgba(201,168,76,0.2)', height: 320 }}>
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox=36.8,55.7,37.2,55.9&layer=mapnik"
-              className="w-full h-full opacity-70"
-              style={{ filter: 'sepia(0.4) saturate(0.7) brightness(0.7)' }}
-              title="Карта"
-            />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center px-6 py-4" style={{ background: 'rgba(22,38,24,0.85)', border: '1px solid rgba(201,168,76,0.3)' }}>
-                <Icon name="MapPin" size={20} className="mx-auto mb-2" style={{ color: 'var(--gold)' }} />
-                <p className="font-['Cormorant_Garamond'] text-lg" style={{ color: 'var(--cream)' }}>Усадьба «Лесной двор»</p>
-                <p className="text-xs opacity-60 mt-1" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>Московская область</p>
+          <div className="article p-2" style={{ borderWidth: 2 }}>
+            <div className="relative" style={{ height: 360, border: '1px solid var(--ink)' }}>
+              <iframe
+                src="https://www.openstreetmap.org/export/embed.html?bbox=36.8,55.7,37.2,55.9&layer=mapnik"
+                className="w-full h-full"
+                style={{ filter: 'sepia(0.85) saturate(0.6) contrast(1.1) brightness(0.95)' }}
+                title="Карта"
+              />
+              <div className="absolute top-3 left-3 stamp" style={{ transform: 'rotate(-3deg)' }}>
+                место встречи
               </div>
             </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 text-center">
-            {[
-              { icon: 'Car', title: 'На автомобиле', desc: '45 минут от МКАД по Минскому шоссе, съезд на 47 км' },
-              { icon: 'Train', title: 'На электричке', desc: 'С Белорусского вокзала до ст. Лесная, далее 5 мин. такси' },
-              { icon: 'Bus', title: 'Трансфер', desc: 'Организуем автобус от м. Киевская в 14:00' },
-            ].map(item => (
-              <div key={item.title} className="p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.12)' }}>
-                <Icon name={item.icon} fallback="Circle" size={18} className="mx-auto mb-3" style={{ color: 'var(--gold)' }} />
-                <h4 className="font-['Cormorant_Garamond'] text-lg mb-2" style={{ color: 'var(--cream)' }}>{item.title}</h4>
-                <p className="text-sm opacity-60 leading-relaxed" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      <div className="gold-line max-w-xs mx-auto opacity-30" />
-
-      {/* RSVP */}
-      <Section id="rsvp" className="py-24 px-6">
-        <div className="max-w-xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs tracking-[0.4em] uppercase mb-4" style={{ color: 'var(--gold)', fontFamily: 'Golos Text' }}>Ответ на приглашение</p>
-            <h2 className="font-['Cormorant_Garamond'] font-light text-4xl md:text-5xl" style={{ color: 'var(--cream)' }}>
-              Подтвердите участие
-            </h2>
-            <Ornament />
-            <p className="opacity-70 text-sm" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
-              Пожалуйста, ответьте до 1 мая 2025 года
+            <p className="text-center typewriter text-xs mt-2" style={{ color: 'var(--sepia)' }}>
+              ИЗВЛЕЧЕНО ИЗ КАРТОГРАФИЧЕСКОГО АРХИВА
             </p>
           </div>
 
-          {submitted ? (
-            <div className="text-center py-12">
-              <div className="text-5xl mb-6">🌿</div>
-              <h3 className="font-['Cormorant_Garamond'] text-3xl mb-3" style={{ color: 'var(--gold)' }}>Спасибо!</h3>
-              <p className="opacity-70 text-base" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
-                Мы получили ваш ответ и с нетерпением ждём встречи
-              </p>
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
+            {[
+              { icon: 'Car', title: 'НА ЭКИПАЖЕ', desc: '45 минут от МКАД по Минскому шоссе, съезд на 47-м километре' },
+              { icon: 'Train', title: 'ПОЕЗДОМ', desc: 'С Белорусского вокзала до станции «Лесная», далее извозчик' },
+              { icon: 'Bus', title: 'ОБЩИМ ТРАНСПОРТОМ', desc: 'Организованный омнибус от метро «Киевская» в 14:00' },
+            ].map(item => (
+              <div key={item.title} className="article">
+                <Icon name={item.icon} fallback="MapPin" size={22} style={{ color: 'var(--forest)' }} />
+                <h4 className="typewriter text-xs tracking-widest mt-3 mb-2" style={{ color: 'var(--ink)' }}>{item.title}</h4>
+                <p className="serif text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <div className="double-border my-12 py-2 text-center">
+          <span className="serif italic text-base px-4" style={{ color: 'var(--forest)' }}>
+            ✦ телеграмма для молодожёнов ✦
+          </span>
+        </div>
+
+        {/* RSVP */}
+        <Section id="rsvp" className="mb-16">
+          <div className="text-center mb-8">
+            <p className="article-label">форма ответа</p>
+            <h2 className="headline text-3xl md:text-5xl mb-2">
+              Подтвердите присутствие
+            </h2>
+            <p className="serif italic" style={{ color: 'var(--sepia)' }}>
+              Просим ответить телеграммой не позднее 1 июля 1926 года
+            </p>
+          </div>
+
+          <div className="article max-w-2xl mx-auto" style={{ borderWidth: 2, padding: '2rem' }}>
+            <div className="text-center mb-6">
+              <span className="stamp">срочно</span>
             </div>
-          ) : (
-            <form onSubmit={handleRsvp} className="space-y-5">
-              <div>
-                <label className="block text-xs tracking-widest uppercase mb-2 opacity-60" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>Ваше имя</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Иван Иванов"
-                  value={rsvpForm.name}
-                  onChange={e => setRsvpForm({ ...rsvpForm, name: e.target.value })}
-                  className="w-full px-4 py-3 forest-input rounded-none"
-                />
-              </div>
 
-              <div>
-                <label className="block text-xs tracking-widest uppercase mb-2 opacity-60" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>Вы придёте?</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[{ value: 'yes', label: 'Да, буду!' }, { value: 'no', label: 'К сожалению, нет' }].map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setRsvpForm({ ...rsvpForm, attend: opt.value })}
-                      className="py-3 text-sm tracking-widest uppercase transition-all duration-300"
-                      style={{
-                        fontFamily: 'Golos Text',
-                        border: `1px solid ${rsvpForm.attend === opt.value ? 'var(--gold)' : 'rgba(201,168,76,0.2)'}`,
-                        background: rsvpForm.attend === opt.value ? 'var(--gold)' : 'transparent',
-                        color: rsvpForm.attend === opt.value ? 'var(--forest)' : 'var(--cream)',
-                      }}>
-                      {opt.label}
-                    </button>
-                  ))}
+            {submitted ? (
+              <div className="text-center py-10">
+                <h3 className="headline text-4xl mb-4" style={{ color: 'var(--forest)' }}>Телеграмма принята!</h3>
+                <p className="serif italic text-lg" style={{ color: 'var(--ink)' }}>
+                  Благодарим за скорый ответ. С нетерпением ждём встречи 21 июля.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleRsvp} className="space-y-6">
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    ВАШЕ ИМЯ И ФАМИЛИЯ
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="например, Иван Петров"
+                    value={rsvpForm.name}
+                    onChange={e => setRsvpForm({ ...rsvpForm, name: e.target.value })}
+                    className="paper-input"
+                  />
                 </div>
+
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-3" style={{ color: 'var(--sepia)' }}>
+                    БУДЕТЕ ЛИ ПРИСУТСТВОВАТЬ?
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[{ value: 'yes', label: 'Да, прибуду' }, { value: 'no', label: 'Не смогу' }].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setRsvpForm({ ...rsvpForm, attend: opt.value })}
+                        className="py-3 typewriter text-xs tracking-widest transition-all"
+                        style={{
+                          background: rsvpForm.attend === opt.value ? 'var(--forest)' : 'transparent',
+                          color: rsvpForm.attend === opt.value ? 'var(--paper)' : 'var(--ink)',
+                          border: '2px solid var(--forest)',
+                          textTransform: 'uppercase',
+                        }}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    КОЛИЧЕСТВО ПЕРСОН
+                  </label>
+                  <select
+                    value={rsvpForm.guests}
+                    onChange={e => setRsvpForm({ ...rsvpForm, guests: e.target.value })}
+                    className="paper-input">
+                    {['1', '2', '3', '4'].map(n => (
+                      <option key={n} value={n}>{n} {n === '1' ? 'персона' : 'персоны'}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="typewriter text-xs tracking-widest block mb-1" style={{ color: 'var(--sepia)' }}>
+                    ПОЖЕЛАНИЯ И ПОМЕТКИ
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="оставьте телеграмму молодожёнам..."
+                    value={rsvpForm.message}
+                    onChange={e => setRsvpForm({ ...rsvpForm, message: e.target.value })}
+                    className="paper-input resize-none"
+                    style={{ borderBottom: '1px dashed var(--ink)' }}
+                  />
+                </div>
+
+                <div className="text-center pt-4">
+                  <button type="submit" className="btn-stamp">
+                    отправить телеграмму
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="mt-8 pt-6 border-t border-dotted" style={{ borderColor: 'var(--ink)' }}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 typewriter text-xs" style={{ color: 'var(--sepia)' }}>
+                <span>ТЕЛЕФОН ДЛЯ СВЯЗИ:</span>
+                <span style={{ color: 'var(--forest)' }}>+7 (999) 123-45-67</span>
+                <span>КРИСТИНА И ВИТАЛИЙ</span>
               </div>
+            </div>
+          </div>
+        </Section>
 
-              <div>
-                <label className="block text-xs tracking-widest uppercase mb-2 opacity-60" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>Количество гостей</label>
-                <select
-                  value={rsvpForm.guests}
-                  onChange={e => setRsvpForm({ ...rsvpForm, guests: e.target.value })}
-                  className="w-full px-4 py-3 forest-input rounded-none appearance-none">
-                  {['1', '2', '3', '4'].map(n => (
-                    <option key={n} value={n} style={{ background: 'var(--forest-light)' }}>{n} {n === '1' ? 'гость' : 'гостя'}</option>
-                  ))}
-                </select>
-              </div>
+        {/* FOOTER MASTHEAD */}
+        <footer className="mt-16 text-center">
+          <div className="thick-rule" />
 
-              <div>
-                <label className="block text-xs tracking-widest uppercase mb-2 opacity-60" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>Пожелания или вопросы</label>
-                <textarea
-                  rows={3}
-                  placeholder="Диетические предпочтения, пожелания..."
-                  value={rsvpForm.message}
-                  onChange={e => setRsvpForm({ ...rsvpForm, message: e.target.value })}
-                  className="w-full px-4 py-3 forest-input rounded-none resize-none"
-                />
-              </div>
+          <div className="my-8">
+            <img src={LEAF_BRANCH} alt="" className="mx-auto h-24 opacity-70" style={{ mixBlendMode: 'multiply' }} />
+          </div>
 
-              <button
-                type="submit"
-                className="w-full py-4 text-sm tracking-widest uppercase font-['Golos_Text'] transition-all duration-300"
-                style={{ background: 'var(--gold)', color: 'var(--forest)' }}
-                onMouseEnter={e => (e.target as HTMLElement).style.background = 'var(--gold-light)'}
-                onMouseLeave={e => (e.target as HTMLElement).style.background = 'var(--gold)'}>
-                Отправить ответ
-              </button>
-            </form>
-          )}
-        </div>
-      </Section>
+          <h3 className="headline-italic text-3xl md:text-4xl mb-4">
+            «Любовь — единственная разумная и удовлетворительная цель человеческого существования»
+          </h3>
+          <p className="serif italic" style={{ color: 'var(--sepia)' }}>— Эрих Фромм</p>
 
-      {/* FOOTER */}
-      <footer className="py-14 text-center px-6" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
-        <div className="font-['Cormorant_Garamond'] text-3xl mb-3" style={{ color: 'var(--gold)' }}>
-          А ✦ Е
-        </div>
-        <p className="text-xs tracking-widest uppercase opacity-40 mb-6" style={{ fontFamily: 'Golos Text', color: 'var(--cream)' }}>
-          14 · 06 · 2025
-        </p>
-        <Ornament />
-        <p className="font-['Cormorant_Garamond'] italic text-base opacity-50" style={{ color: 'var(--cream)' }}>
-          «Любовь — это не то, что мы находим. Это то, что мы создаём вместе»
-        </p>
-      </footer>
+          <div className="mt-8 thick-rule" />
+
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs typewriter mt-4 gap-2" style={{ color: 'var(--ink-soft)' }}>
+            <span>ОТПЕЧАТАНО С ЛЮБОВЬЮ</span>
+            <span>К · &nbsp;&nbsp;✦&nbsp;&nbsp; · В</span>
+            <span>21 · 07 · 2026</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
